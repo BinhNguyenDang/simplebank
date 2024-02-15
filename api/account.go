@@ -111,33 +111,37 @@ func (server *Server) deleteAccount(ctx *gin.Context){
 	}
 }
 
-type updateAccountRequest struct {
+type updateUriRequest struct {
 	ID int64 `uri:"id" binding:"required,min=1"`
-	Balance int64 `json:"balance" binding:"required"`
-}
-
-func (server *Server) updateAccount(ctx *gin.Context){
-	var req updateAccountRequest
-	if err := ctx.ShouldBindUri(&req.ID); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+  }
+   
+  type updateJsonRequest struct {
+	Balance int64 `json:"balance"`
+  }
+   
+  func (server *Server) updateAccount(ctx *gin.Context) {
+	var req updateJsonRequest
+	var id updateUriRequest
+	if err := ctx.ShouldBindUri(&id); err != nil {
+	  ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	  return
 	}
+   
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
+	  ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	  return
 	}
-	
+   
 	arg := db.UpdateAccountParams{
-		ID:    req.ID,
-		Balance: req.Balance,
+	  ID:      id.ID,
+	  Balance: req.Balance,
 	}
-
-	account, err := server.store.UpdateAccount(ctx, arg)
+   
+	acc, err := server.store.UpdateAccount(ctx, arg)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+	  ctx.JSON(http.StatusUnprocessableEntity, errorResponse(err))
+	  return
 	}
-
-	ctx.JSON(http.StatusOK, account)
-}
-
+   
+	ctx.JSON(http.StatusOK, acc)
+  }
