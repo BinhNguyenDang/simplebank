@@ -116,7 +116,7 @@ type updateUriRequest struct {
   }
    
   type updateJsonRequest struct {
-	Balance int64 `json:"balance"`
+	Balance int64 `json:"balance" binding:"required"`
   }
    
   func (server *Server) updateAccount(ctx *gin.Context) {
@@ -128,7 +128,7 @@ type updateUriRequest struct {
 	}
    
 	if err := ctx.ShouldBindJSON(&req); err != nil {
-	  ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+	  ctx.JSON(http.StatusBadRequest, errorResponse(err))
 	  return
 	}
    
@@ -139,7 +139,7 @@ type updateUriRequest struct {
    
 	acc, err := server.store.UpdateAccount(ctx, arg)
 	if err != nil {
-	  ctx.JSON(http.StatusUnprocessableEntity, errorResponse(err))
+	  ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 	  return
 	}
    
