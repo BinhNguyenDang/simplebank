@@ -3,6 +3,8 @@ package api
 import (
 	db "github.com/BinhNguyenDang/simplebank/db/sqlc"
 	"github.com/gin-gonic/gin"
+	"github.com/gin-gonic/gin/binding" //sub package of gin
+	"github.com/go-playground/validator/v10"
 )
 
 // server serves HTTP requests for our banking service.
@@ -15,6 +17,12 @@ func NewServer(store db.Store) *Server {
 	server := &Server{store: store}
 	router := gin.Default()
 
+	// to get the current validator engine that gin using 
+	// Engine() return  a general interface type which by default is a pointer to validator onjects
+	// convert output to a validator pointer
+	if v, ok := binding.Validator.Engine().(*validator.Validate); ok{
+		v.RegisterValidation("currency", validCurrency)
+	}
 	router.POST("/accounts", server.createAccount)
 	router.GET("/accounts/:id", server.getAccount)
 	router.GET("/accounts", server.listAccount)

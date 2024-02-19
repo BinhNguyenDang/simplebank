@@ -10,6 +10,7 @@ import (
 
 	mockdb "github.com/BinhNguyenDang/simplebank/db/mock"
 	db "github.com/BinhNguyenDang/simplebank/db/sqlc"
+	"github.com/BinhNguyenDang/simplebank/util"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
 	"github.com/stretchr/testify/require"
@@ -20,9 +21,9 @@ func TestCreateTransferAPI(t *testing.T) {
 	account2 := randomAccount()
 	account3 := randomAccount()
 
-	account1.Currency = "USD"
-	account2.Currency = "USD"
-	account3.Currency = "EUR"
+	account1.Currency = util.USD
+	account2.Currency = util.USD
+	account3.Currency = util.EUR
 
 	testCases := []struct {
 		name          string
@@ -36,7 +37,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				"from_account_id": account1.ID,
 				"to_account_id":   account2.ID,
 				"amount":          10,
-				"currency":        "USD",
+				"currency":        util.USD,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -63,7 +64,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				"from_account_id": account1.ID,
 				"to_account_id":   account2.ID,
 				"amount":          10,
-				"currency":        "USD",
+				"currency":        util.USD,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -86,7 +87,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				"from_account_id": account1.ID,
 				"to_account_id":   account2.ID,
 				"amount":          10,
-				"currency":        "USD",
+				"currency":        util.USD,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -108,7 +109,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				"from_account_id": account3.ID,
 				"to_account_id":   account2.ID,
 				"amount":          10,
-				"currency":        "USD",
+				"currency":        util.USD,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -130,7 +131,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				"from_account_id": account1.ID,
 				"to_account_id":   account3.ID,
 				"amount":          10,
-				"currency":        "USD",
+				"currency":        util.USD,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -168,7 +169,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				"from_account_id": account1.ID,
 				"to_account_id":   account2.ID,
 				"amount":          -10,
-				"currency":        "USD",
+				"currency":        util.USD,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().GetAccount(gomock.Any(), gomock.Any()).Times(0)
@@ -184,7 +185,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				"from_account_id": account1.ID,
 				"to_account_id":   account2.ID,
 				"amount":          10,
-				"currency":        "USD",
+				"currency":        util.USD,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -206,7 +207,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				"from_account_id": account1.ID,
 				"to_account_id":   account2.ID,
 				"amount":          10,
-				"currency":        "USD",
+				"currency":        util.USD,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
