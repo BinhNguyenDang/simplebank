@@ -17,9 +17,13 @@ import (
 )
 
 func TestCreateTransferAPI(t *testing.T) {
-	account1 := randomAccount()
-	account2 := randomAccount()
-	account3 := randomAccount()
+
+	user1, _ := randomUser(t)
+	user2, _ := randomUser(t)
+	user3, _ := randomUser(t)
+	account1 := randomAccount(user1.Username)
+	account2 := randomAccount(user2.Username)
+	account3 := randomAccount(user3.Username)
 
 	account1.Currency = util.USD
 	account2.Currency = util.USD
@@ -202,7 +206,7 @@ func TestCreateTransferAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "ValidAccountInternalError",
+			name: "ValidAccountInternalError",
 			body: gin.H{ // read by httpNewRequest
 				"from_account_id": account1.ID,
 				"to_account_id":   account2.ID,
@@ -217,7 +221,7 @@ func TestCreateTransferAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
-	
+
 			},
 		},
 	}
