@@ -81,6 +81,9 @@ func Prepare(ctx context.Context, db DBTX) (*Queries, error) {
 	if q.updateUserStmt, err = db.PrepareContext(ctx, updateUser); err != nil {
 		return nil, fmt.Errorf("error preparing query UpdateUser: %w", err)
 	}
+	if q.updateVerifyEmailStmt, err = db.PrepareContext(ctx, updateVerifyEmail); err != nil {
+		return nil, fmt.Errorf("error preparing query UpdateVerifyEmail: %w", err)
+	}
 	return &q, nil
 }
 
@@ -181,6 +184,11 @@ func (q *Queries) Close() error {
 			err = fmt.Errorf("error closing updateUserStmt: %w", cerr)
 		}
 	}
+	if q.updateVerifyEmailStmt != nil {
+		if cerr := q.updateVerifyEmailStmt.Close(); cerr != nil {
+			err = fmt.Errorf("error closing updateVerifyEmailStmt: %w", cerr)
+		}
+	}
 	return err
 }
 
@@ -239,6 +247,7 @@ type Queries struct {
 	listTransfersStmt       *sql.Stmt
 	updateAccountStmt       *sql.Stmt
 	updateUserStmt          *sql.Stmt
+	updateVerifyEmailStmt   *sql.Stmt
 }
 
 func (q *Queries) WithTx(tx *sql.Tx) *Queries {
@@ -264,5 +273,6 @@ func (q *Queries) WithTx(tx *sql.Tx) *Queries {
 		listTransfersStmt:       q.listTransfersStmt,
 		updateAccountStmt:       q.updateAccountStmt,
 		updateUserStmt:          q.updateUserStmt,
+		updateVerifyEmailStmt:   q.updateVerifyEmailStmt,
 	}
 }
