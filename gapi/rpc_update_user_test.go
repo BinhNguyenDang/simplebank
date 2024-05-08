@@ -19,10 +19,12 @@ import (
 
 func TestUpdateUserAPI(t *testing.T) {
 	user, _ := randomUser(t)
+	user1, _ := randomUser(t)
 
 	newName := util.RandomOwner()
 	newEmail := util.RandomEmail()
 	invalidEmail := "invalid email"
+	invalidName := "in"
 
 	testCases := []struct {
 		name          string
@@ -170,6 +172,75 @@ func TestUpdateUserAPI(t *testing.T) {
 				require.Equal(t, codes.InvalidArgument, st.Code())
 			},
 		},
+		{
+			name: "InvalidFullName",
+			req: &pb.UpdateUserRequest{
+				Username: user.Username,
+				FullName: &invalidName,
+				Email:    &newEmail,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateUser(gomock.Any(), gomock.Any()).
+					Times(0)
+
+			},
+			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
+				return newContextWithBearerToken(t, tokenMaker, user.Username, time.Minute)
+			},
+			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				require.Equal(t, codes.InvalidArgument, st.Code())
+			},
+		},
+		{
+			name: "PermissionDeniedForOtherUser",
+			req: &pb.UpdateUserRequest{
+				Username: user1.Username,
+				FullName: &newName,
+				Email:    &newEmail,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateUser(gomock.Any(), gomock.Any()).
+					Times(0)
+			},
+			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
+				return newContextWithBearerToken(t, tokenMaker, user.Username, time.Minute)
+			},
+			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				require.Equal(t, codes.PermissionDenied, st.Code())
+			},
+		},
+		{
+			name: "InternalError",
+			req: &pb.UpdateUserRequest{
+				Username: user.Username,
+				FullName: &newName,
+				Email:    &newEmail,
+			},
+			buildStubs: func(store *mockdb.MockStore) {
+				store.EXPECT().
+					UpdateUser(gomock.Any(), gomock.Any()).
+					Times(1).
+					Return(db.User{}, sql.ErrConnDone)
+
+			},
+			buildContext: func(t *testing.T, tokenMaker token.Maker) context.Context {
+				return newContextWithBearerToken(t, tokenMaker, user.Username, time.Minute)
+			},
+			checkResponse: func(t *testing.T, res *pb.UpdateUserResponse, err error) {
+				require.Error(t, err)
+				st, ok := status.FromError(err)
+				require.True(t, ok)
+				require.Equal(t, codes.Internal, st.Code())
+			},
+		},
 	}
 	for i := range testCases {
 		tc := testCases[i]
@@ -196,3 +267,4 @@ func TestUpdateUserAPI(t *testing.T) {
 
 	}
 }
+
