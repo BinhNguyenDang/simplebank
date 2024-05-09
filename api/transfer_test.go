@@ -125,7 +125,7 @@ func TestCreateTransferAPI(t *testing.T) {
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
-					GetAccount(gomock.Any(), gomock.Any()).Times(1).Return(db.Account{}, sql.ErrNoRows)
+					GetAccount(gomock.Any(), gomock.Any()).Times(1).Return(db.Account{}, db.ErrRecordNotFound)
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Any()).Times(0)
 
@@ -154,7 +154,7 @@ func TestCreateTransferAPI(t *testing.T) {
 				store.EXPECT().
 					GetAccount(gomock.Any(), gomock.Eq(account1.ID)).Times(1).Return(account1, nil)
 				store.EXPECT().
-					GetAccount(gomock.Any(), gomock.Any()).Times(1).Return(db.Account{}, sql.ErrNoRows)
+					GetAccount(gomock.Any(), gomock.Any()).Times(1).Return(db.Account{}, db.ErrRecordNotFound)
 				store.EXPECT().
 					TransferTx(gomock.Any(), gomock.Any()).
 					Times(0)

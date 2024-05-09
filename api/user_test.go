@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"reflect"
@@ -16,7 +16,6 @@ import (
 	"github.com/BinhNguyenDang/simplebank/util"
 	"github.com/gin-gonic/gin"
 	"github.com/golang/mock/gomock"
-	"github.com/lib/pq"
 	"github.com/stretchr/testify/require"
 )
 
@@ -80,13 +79,13 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 		},
 		{
-			name:      "InternalError",
+			name: "InternalError",
 			body: gin.H{
-                "username":  user.Username,
+				"username":  user.Username,
 				"password":  password,
 				"full_name": user.FullName,
 				"email":     user.Email,
-            },
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
@@ -95,36 +94,36 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusInternalServerError, recorder.Code)
-	
+
 			},
 		},
 		{
-			name:      "DuplicateUser",
+			name: "DuplicateUser",
 			body: gin.H{
-                "username":  user.Username,
+				"username":  user.Username,
 				"password":  password,
 				"full_name": user.FullName,
 				"email":     user.Email,
-            },
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, &pq.Error{Code: "23505"})
+					Return(db.User{}, db.ErrUniqueViolation)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusForbidden, recorder.Code)
-	
+
 			},
 		},
 		{
-			name:      "InvalidUser",
+			name: "InvalidUser",
 			body: gin.H{
-                "username":  "Invalid-1",
+				"username":  "Invalid-1",
 				"password":  password,
 				"full_name": user.FullName,
 				"email":     user.Email,
-            },
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
@@ -132,17 +131,17 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
-	
+
 			},
 		},
 		{
-			name:      "InvalidUser",
+			name: "InvalidUser",
 			body: gin.H{
-                "username":  user.Username,
+				"username":  user.Username,
 				"password":  password,
 				"full_name": user.FullName,
 				"email":     "binhgmail.com",
-            },
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
@@ -150,17 +149,17 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
-	
+
 			},
 		},
 		{
-			name:      "ShortPassword",
+			name: "ShortPassword",
 			body: gin.H{
-                "username":  user.Username,
+				"username":  user.Username,
 				"password":  "123",
 				"full_name": user.FullName,
 				"email":     user.Email,
-            },
+			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
 					CreateUser(gomock.Any(), gomock.Any()).
@@ -168,7 +167,7 @@ func TestCreateUserAPI(t *testing.T) {
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusBadRequest, recorder.Code)
-	
+
 			},
 		},
 	}
@@ -218,7 +217,7 @@ func randomUser(t *testing.T) (user db.User, password string) {
 }
 
 func requireBodyMatchUser(t *testing.T, body *bytes.Buffer, user db.User) {
-	data, err := ioutil.ReadAll(body)
+	data, err := io.ReadAll(body)
 	require.NoError(t, err)
 
 	var gotUser db.User
@@ -243,8 +242,8 @@ func TestLoginUserAPI(t *testing.T) {
 		{
 			name: "OK",
 			body: gin.H{ // read by httpNewRequest
-				"username":  user.Username,
-				"password":  password,
+				"username": user.Username,
+				"password": password,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().
@@ -252,7 +251,7 @@ func TestLoginUserAPI(t *testing.T) {
 					Times(1).
 					Return(user, nil)
 				store.EXPECT().
-				    CreateSession(gomock.Any(), gomock.Any()).
+					CreateSession(gomock.Any(), gomock.Any()).
 					Times(1)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
@@ -269,7 +268,7 @@ func TestLoginUserAPI(t *testing.T) {
 				store.EXPECT().
 					GetUser(gomock.Any(), gomock.Any()).
 					Times(1).
-					Return(db.User{}, sql.ErrNoRows)
+					Return(db.User{}, db.ErrRecordNotFound)
 			},
 			checkResponse: func(t *testing.T, recorder *httptest.ResponseRecorder) {
 				require.Equal(t, http.StatusNotFound, recorder.Code)
@@ -310,8 +309,8 @@ func TestLoginUserAPI(t *testing.T) {
 		{
 			name: "InvalidUsername",
 			body: gin.H{
-				"username":  "invalid-user#1",
-				"password":  password,
+				"username": "invalid-user#1",
+				"password": password,
 			},
 			buildStubs: func(store *mockdb.MockStore) {
 				store.EXPECT().

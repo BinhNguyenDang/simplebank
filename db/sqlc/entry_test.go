@@ -5,18 +5,17 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/require"
 	"github.com/BinhNguyenDang/simplebank/util"
+	"github.com/stretchr/testify/require"
 )
 
-
-func CreateRandomEntry(t *testing.T, account Account) Entry{
+func CreateRandomEntry(t *testing.T, account Account) Entry {
 	arg := CreateEntryParams{
 		AccountID: account.ID,
-		Amount: util.RandomMoney(),
+		Amount:    util.RandomMoney(),
 	}
 
-	entry, err := testQueries.CreateEntry(context.Background(), arg)
+	entry, err := testStore.CreateEntry(context.Background(), arg)
 	require.NoError(t, err)
 	require.Equal(t, arg.AccountID, entry.AccountID)
 	require.NotEmpty(t, entry)
@@ -24,44 +23,43 @@ func CreateRandomEntry(t *testing.T, account Account) Entry{
 	require.NotZero(t, entry.ID)
 	require.NotZero(t, entry.CreatedAt)
 
-	return entry	
+	return entry
 }
 
-func TestCreateEntry(t *testing.T){
+func TestCreateEntry(t *testing.T) {
 	account := CreateRandomAccount(t)
 	CreateRandomEntry(t, account)
 }
 
-func TestGetEntry(t *testing.T){
+func TestGetEntry(t *testing.T) {
 	account := CreateRandomAccount(t)
 	entry1 := CreateRandomEntry(t, account)
-	entry2, err := testQueries.GetEntry(context.Background(), entry1.ID)
+	entry2, err := testStore.GetEntry(context.Background(), entry1.ID)
 
 	require.NoError(t, err)
 	require.NotEmpty(t, entry2)
 	require.Equal(t, entry1.ID, entry2.ID)
 	require.Equal(t, entry1.AccountID, entry2.AccountID)
 	require.Equal(t, entry1.Amount, entry2.Amount)
-	require.WithinDuration(t, entry1.CreatedAt, entry2.CreatedAt, time.Second )
+	require.WithinDuration(t, entry1.CreatedAt, entry2.CreatedAt, time.Second)
 }
 
-func TestListEntries(t *testing.T){
+func TestListEntries(t *testing.T) {
 	account := CreateRandomAccount(t)
-	for i:=0; i<10 ; i++ {
+	for i := 0; i < 10; i++ {
 		CreateRandomEntry(t, account)
 	}
-	arg:= ListEntriesParams{
+	arg := ListEntriesParams{
 		AccountID: account.ID,
-		Limit: 5,
-		Offset: 5,
+		Limit:     5,
+		Offset:    5,
 	}
 
-	entries, err := testQueries.ListEntries(context.Background(), arg)
+	entries, err := testStore.ListEntries(context.Background(), arg)
 	require.NoError(t, err)
 	require.Len(t, entries, 5)
 
 	for _, entry := range entries {
 		require.NotEmpty(t, entry)
-	} 
+	}
 }
-
